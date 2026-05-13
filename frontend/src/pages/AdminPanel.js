@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Menu, X, Plus, Edit2, Trash2, Lock, Search, BarChart3, Users, Landmark, ShieldAlert, FileText, ChevronRight, CheckCircle, AlertTriangle, TrendingUp, Activity, PieChart, ShieldCheck, Download, Filter, ArrowUpRight, ArrowDownRight, Settings } from 'lucide-react';
+import { LogOut, Menu, X, Plus, Edit2, Trash2, Lock, Search, BarChart3, Users, User, Landmark, ShieldAlert, FileText, ChevronRight, CheckCircle, AlertTriangle, TrendingUp, Activity, PieChart, ShieldCheck, Download, Filter, ArrowUpRight, ArrowDownRight, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const AdminPanel = () => {
