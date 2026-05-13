@@ -3,12 +3,14 @@ import React, { createContext, useState, useCallback, useEffect } from 'react';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = sessionStorage.getItem('hofc_active_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // --- AUTO-SEED DATA IF EMPTY ---
   useEffect(() => {
     const saved = localStorage.getItem('hofc_users');
     if (!saved) {
@@ -32,6 +34,8 @@ export const AuthProvider = ({ children }) => {
       if (foundUser) {
         setUser(foundUser);
         setIsAdmin(foundUser.role === 'admin');
+        sessionStorage.setItem('hofc_active_user', JSON.stringify(foundUser));
+        localStorage.setItem('token', 'dummy-token-for-hofc'); // Set token for ProtectedRoute
         return true;
       } else {
         setError('Invalid credentials');
@@ -50,8 +54,11 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       if (adminId === 'admin' && password === 'Admin@HOFC') {
-        setUser({ userId: 'admin', name: 'Super Admin' });
+        const adminObj = { userId: 'admin', name: 'Super Admin', role: 'admin' };
+        setUser(adminObj);
         setIsAdmin(true);
+        sessionStorage.setItem('hofc_active_user', JSON.stringify(adminObj));
+        localStorage.setItem('admin_token', 'dummy-admin-token'); // Set token for ProtectedRoute
         return true;
       } else {
         setError('Invalid Admin Credentials');
@@ -68,6 +75,9 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(() => {
     setUser(null);
     setIsAdmin(false);
+    sessionStorage.removeItem('hofc_active_user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('admin_token');
   }, []);
 
   return (
