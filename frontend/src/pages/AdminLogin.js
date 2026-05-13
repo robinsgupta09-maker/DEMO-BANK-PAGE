@@ -1,30 +1,28 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { adminLogin } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // --- MOCK ADMIN LOGIN LOGIC ---
-    setTimeout(() => {
-      if (username === 'admin' && password === 'Admin@HDOC') {
-        localStorage.setItem('admin_token', 'mock_admin_token_123');
-        localStorage.setItem('admin_id', 'admin_001');
-        navigate('/admin');
-      } else {
-        setError('Invalid Admin Credentials. Please check Username/Password.');
-      }
+    const success = await adminLogin(username, password);
+    if (success) {
+      navigate('/admin');
+    } else {
+      setError('Invalid Admin Credentials. Use admin / Admin@HOFC');
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -58,8 +56,8 @@ const AdminLogin = () => {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full border border-gray-200 py-4 pl-12 pr-4 text-sm font-bold uppercase tracking-tight outline-none focus:border-[#ed1c24] rounded-sm transition-all"
-                    placeholder="Enter Username"
+                    className="w-full border border-gray-200 py-4 pl-12 pr-4 text-sm font-bold tracking-tight outline-none focus:border-[#ed1c24] rounded-sm transition-all"
+                    placeholder="Enter Username (admin)"
                     required
                   />
                 </div>
@@ -92,7 +90,7 @@ const AdminLogin = () => {
           </form>
 
           <div className="mt-8 pt-8 border-t border-gray-100 flex justify-between items-center text-[9px] font-black text-gray-400 uppercase tracking-tighter">
-            <span>v4.2.0-STABLE</span>
+            <span>v4.5.0-STABLE</span>
             <span className="flex items-center gap-1"><Lock size={10} /> 256-BIT ENCRYPTION</span>
           </div>
         </div>
