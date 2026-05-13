@@ -12,8 +12,16 @@ const AdminPanel = () => {
   const navigate = useNavigate();
 
   const [users, setUsers] = useState(() => {
-    const saved = localStorage.getItem('hofc_users');
-    return saved ? JSON.parse(saved) : [
+    try {
+      const saved = localStorage.getItem('hofc_users');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error("Failed to parse users", e);
+    }
+    return [
       { id: 1, userId: 'hdocuser', name: 'RAHUL KUMAR', email: 'rahul@example.com', balance: 254892.50, status: 'ACTIVE', acc: '50100451278964', joined: '15 Jan 2024' },
       { id: 2, userId: 'user2', name: 'PRIYA SHARMA', email: 'priya@example.com', balance: 175430.00, status: 'ACTIVE', acc: '50100451278965', joined: '10 Feb 2024' },
       { id: 3, userId: 'user3', name: 'AMIT PATEL', email: 'amit@example.com', balance: 425680.75, status: 'FROZEN', acc: '50100451278966', joined: '05 Mar 2024' },
@@ -26,16 +34,17 @@ const AdminPanel = () => {
     { id: 3, action: 'New User Registered', user: 'PRIYA SHARMA', admin: 'System', time: '5 hours ago', status: 'Success' },
   ];
 
-  const totalDeposits = users.reduce((s, u) => s + u.balance, 0);
+  const totalDeposits = Array.isArray(users) ? users.reduce((s, u) => s + (u.balance || 0), 0) : 0;
 
   const stats = [
-    { label: 'TOTAL CUSTOMERS', value: users.length, icon: Users, color: 'bg-blue-600', trend: '+12%' },
-    { label: 'ACTIVE ACCOUNTS', value: users.filter(u => u.status === 'ACTIVE').length, icon: CheckCircle, color: 'bg-green-600', trend: 'Stable' },
-    { label: 'FROZEN ACCOUNTS', value: users.filter(u => u.status === 'FROZEN').length, icon: ShieldAlert, color: 'bg-red-600', trend: '-2%' },
+    { label: 'TOTAL CUSTOMERS', value: users.length || 0, icon: Users, color: 'bg-blue-600', trend: '+12%' },
+    { label: 'ACTIVE ACCOUNTS', value: users.filter(u => u.status === 'ACTIVE').length || 0, icon: CheckCircle, color: 'bg-green-600', trend: 'Stable' },
+    { label: 'FROZEN ACCOUNTS', value: users.filter(u => u.status === 'FROZEN').length || 0, icon: ShieldAlert, color: 'bg-red-600', trend: '-2%' },
     { label: 'TOTAL DEPOSITS', value: `₹${(totalDeposits / 100000).toFixed(2)}L`, icon: Landmark, color: 'bg-[#004a89]', trend: '+8.4%' }
   ];
 
   const handleUpdateUser = () => {
+    if (!selectedUser) return;
     const updatedUsers = users.map(u => u.id === selectedUser.id ? { 
       ...u, 
       balance: newBalance ? parseFloat(newBalance) : u.balance,
@@ -57,7 +66,7 @@ const AdminPanel = () => {
             <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between group hover:shadow-md transition-all">
                <div className="flex justify-between items-start mb-4">
                   <div className={`p-2.5 rounded-lg text-white shadow-lg ${s.color}`}><s.icon size={20} /></div>
-                  <span className={`text-[10px] font-black px-2 py-1 rounded-sm ${s.trend.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>{s.trend}</span>
+                  <span className={`text-[10px] font-black px-2 py-1 rounded-sm ${s.trend && s.trend.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>{s.trend}</span>
                </div>
                <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{s.label}</p>
@@ -90,7 +99,7 @@ const AdminPanel = () => {
                   <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#ef4444" strokeWidth="4.5" strokeDasharray="30 100" strokeDashoffset="-70"></circle>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center flex-col">
-                   <p className="text-xl font-black text-gray-800">{users.length}</p>
+                   <p className="text-xl font-black text-gray-800">{users.length || 0}</p>
                    <p className="text-[9px] font-black text-gray-400 uppercase">Users</p>
                 </div>
              </div>
@@ -136,14 +145,14 @@ const AdminPanel = () => {
             <tr><th className="px-8 py-5">Full Details</th><th className="px-8 py-5">Acc Number</th><th className="px-8 py-5 text-right">Balance (₹)</th><th className="px-8 py-5 text-center">Status</th><th className="px-8 py-5 text-center">Action</th></tr>
           </thead>
           <tbody className="font-bold text-gray-700">
-            {users.map(u => (
+            {Array.isArray(users) && users.map(u => (
               <tr key={u.id} className="border-b border-gray-50 hover:bg-blue-50/20 transition-colors">
                 <td className="px-8 py-5 flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-[#004a89] font-black text-sm uppercase">{u.name.charAt(0)}</div>
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-[#004a89] font-black text-sm uppercase">{u.name ? u.name.charAt(0) : 'U'}</div>
                   <div><p className="text-gray-900 font-black uppercase tracking-tighter">{u.name}</p><p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{u.userId}</p></div>
                 </td>
                 <td className="px-8 py-5 text-gray-500 font-mono text-[12px]">{u.acc}</td>
-                <td className="px-8 py-5 text-right font-black text-gray-900 text-[13px]">₹ {u.balance.toLocaleString('en-IN')}</td>
+                <td className="px-8 py-5 text-right font-black text-gray-900 text-[13px]">₹ {u.balance ? u.balance.toLocaleString('en-IN') : '0'}</td>
                 <td className="px-8 py-5 text-center"><span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${u.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>{u.status}</span></td>
                 <td className="px-8 py-5">
                   <div className="flex justify-center gap-2">
@@ -213,7 +222,7 @@ const AdminPanel = () => {
               <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 relative group">
                 <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest mb-2">Subject Target</p>
                 <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-[#004a89] rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg group-hover:scale-105 transition-transform">{selectedUser.name.charAt(0)}</div>
+                   <div className="w-12 h-12 bg-[#004a89] rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg group-hover:scale-105 transition-transform">{selectedUser.name ? selectedUser.name.charAt(0) : 'U'}</div>
                    <div><p className="text-xl text-gray-800 font-black tracking-tighter uppercase">{selectedUser.name}</p><p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{selectedUser.acc}</p></div>
                 </div>
               </div>
