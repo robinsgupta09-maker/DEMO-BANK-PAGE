@@ -1,5 +1,4 @@
-import React, { createContext, useState, useCallback } from 'react';
-import { authAPI } from '../utils/api';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
 
 export const AuthContext = createContext();
 
@@ -9,17 +8,37 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // --- AUTO-SEED DATA IF EMPTY ---
+  useEffect(() => {
+    const saved = localStorage.getItem('hofc_users');
+    if (!saved) {
+      const defaultUsers = [
+        { id: 1, userId: 'hdocuser', password: 'HOFC@123', name: 'RAHUL KUMAR', balance: 254892.50, status: 'ACTIVE' },
+        { id: 2, userId: 'admin', password: 'Admin@HOFC', name: 'Super Admin', status: 'ACTIVE', role: 'admin' }
+      ];
+      localStorage.setItem('hofc_users', JSON.stringify(defaultUsers));
+    }
+  }, []);
+
   const login = useCallback(async (userId, password) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authAPI.login(userId, password);
-      const { token, user: userData } = response.data;
-      localStorage.setItem('token', token);
-      setUser(userData);
-      return true;
+      const saved = localStorage.getItem('hofc_users');
+      const users = saved ? JSON.parse(saved) : [];
+      
+      const foundUser = users.find(u => u.userId === userId && u.password === password);
+      
+      if (foundUser) {
+        setUser(foundUser);
+        setIsAdmin(foundUser.role === 'admin');
+        return true;
+      } else {
+        setError('Invalid credentials');
+        return false;
+      }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError('Login failed');
       return false;
     } finally {
       setLoading(false);
@@ -30,16 +49,16 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authAPI.adminLogin?.(adminId, password) || 
-        authAPI.login(adminId, password);
-      const { token } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('admin_token', token);
-      setUser({ id: adminId, name: 'Admin' });
-      setIsAdmin(true);
-      return true;
+      if (adminId === 'admin' && password === 'Admin@HOFC') {
+        setUser({ userId: 'admin', name: 'Super Admin' });
+        setIsAdmin(true);
+        return true;
+      } else {
+        setError('Invalid Admin Credentials');
+        return false;
+      }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Admin login failed');
+      setError('Admin Login failed');
       return false;
     } finally {
       setLoading(false);
@@ -47,8 +66,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('admin_token');
     setUser(null);
     setIsAdmin(false);
   }, []);
