@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Edit2, Trash2, Lock, Search, BarChart, Users, User, Landmark, ShieldAlert, FileText, ChevronRight, CheckCircle, TrendingUp, Activity, PieChart, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { LogOut, Plus, Edit2, Trash2, Lock, Search, BarChart, Users, User, Landmark, ShieldAlert, FileText, ChevronRight, CheckCircle, TrendingUp, Activity, PieChart, ShieldCheck, ArrowUpRight, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const AdminPanel = () => {
