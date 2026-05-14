@@ -14,19 +14,33 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   // --- ENSURE DATA INTEGRITY (Local Fallback) ---
-  useEffect(() => {
-    const seedData = () => {
-      const saved = localStorage.getItem('hdoc_users');
-      const defaultUsers = [
-        { id: 1, userId: 'hdocuser', password: 'HDOC@123', name: 'RAHUL KUMAR', balance: 254892.50, status: 'ACTIVE', acc: '50100451278964', role: 'user' },
-        { id: 2, userId: 'admin', password: 'Admin@HDOC', name: 'Super Admin', status: 'ACTIVE', acc: 'ADMIN-001', role: 'admin' }
-      ];
-
-      if (!saved) {
-        localStorage.setItem('hdoc_users', JSON.stringify(defaultUsers));
+  const seedUsers = () => {
+    const existingUsers = localStorage.getItem('hdoc_users');
+    const defaultUsers = [
+      { id: '1', userId: 'hdocuser', password: 'HDOC@123', name: 'SUPER ADMIN', balance: 254892.50, acc: 'ADMIN-001', role: 'user' },
+      { id: '2', userId: 'admin', password: 'Admin@HDOC', name: 'System Administrator', role: 'admin' }
+    ];
+    
+    if (!existingUsers) {
+      localStorage.setItem('hdoc_users', JSON.stringify(defaultUsers));
+    } else {
+      // Emergency sync: Ensure default users exist even if storage is dirty
+      const current = JSON.parse(existingUsers);
+      const hasUser = current.find(u => u.userId === 'hdocuser');
+      if (!hasUser) {
+        localStorage.setItem('hdoc_users', JSON.stringify([...current, ...defaultUsers]));
       }
-    };
-    seedData();
+    }
+  };
+
+  useEffect(() => {
+    seedUsers();
+    const token = localStorage.getItem('hdoc_token');
+    const savedUser = localStorage.getItem('hdoc_current_user');
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
   }, []);
 
   const login = useCallback(async (userId, password) => {
